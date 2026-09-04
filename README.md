@@ -4,7 +4,7 @@ A responsive CarbonProfile administration interface built with Next.js, React, a
 
 ## Implemented routes
 
-- `/login`, `/forgot-password`, `/set-password`
+- `/login`, `/forgot-password`, `/reset-password`, `/setup-password`
 - `/staff`, `/staff/new`
 - `/companies`, `/companies/new`, `/companies/[id]`
 - `/templates`
@@ -17,7 +17,8 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3001](http://localhost:3001). Port 3000 is reserved for
+the local platform backend.
 
 The root route redirects to the Staff screen, matching the first admin navigation item.
 

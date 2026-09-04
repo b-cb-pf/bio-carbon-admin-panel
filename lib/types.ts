@@ -9,11 +9,21 @@ export type Staff = {
 
 export type Company = {
   id: string;
+  workspace?: string;
+  loginUrl?: string;
   name: string;
   legalEntityNumber: string;
   contractStartDate: string;
   contractEndDate: string;
-  adminEmail: string;
+  adminEmail?: string;
+  adminInvitationStatus?: "pending" | "sent" | "logged" | "failed" | "expired" | "accepted";
+  status?: "active" | "suspended";
+  createdAt?: string;
+  invitation?: {
+    setupUrl: string;
+    expiresAt: string;
+    deliveryStatus: "sent" | "logged" | "failed";
+  };
 };
 
 export type TemplateFile = {

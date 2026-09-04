@@ -1,14 +1,63 @@
 "use client";
 
-import { ArrowLeft, Check } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
 import { FormEvent, useState } from "react";
 import { Brand } from "@/components/brand";
+import { FormError } from "@/components/ui/form-error";
 import { authApi } from "@/lib/api/auth-api";
+import { apiErrorMessage, apiFieldErrors } from "@/lib/api/client";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); await authApi.requestPasswordReset(email); setSent(true); }
-  return <main className="auth-page"><div className="auth-content"><Brand light />{sent ? <section className="auth-card success-card"><span className="success-icon"><Check size={22} /></span><h2>Check your email</h2><p>We sent password reset instructions to <strong>{email}</strong>.</p><Link className="button button--primary" href="/login">Back to login</Link></section> : <form className="auth-card" onSubmit={submit}><h2>Forgot password</h2><p className="auth-subtitle" style={{ color: "#737d78", textAlign: "center" }}>Enter your email and we’ll send you a reset link.</p><label className="field"><span>Email <i className="required">*</i></span><input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" autoFocus /></label><button className="button button--primary" disabled={!email} type="submit">Send reset link</button><Link className="forgot-link" href="/login"><ArrowLeft size={11} /> Back to login</Link></form>}</div></main>;
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setEmailError("");
+    try {
+      await authApi.requestPasswordReset(email.trim());
+      setSent(true);
+    } catch (reason) {
+      const fields = apiFieldErrors(reason);
+      if (fields.email) setEmailError(fields.email);
+      else setError(apiErrorMessage(reason, "Unable to request a password reset. Please try again later."));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (sent) {
+    return (
+      <main className="auth-page auth-page--figma-status">
+        <Image className="link-expired-background" src="/assets/auth/link-expired-background.svg" width={819} height={640} alt="" aria-hidden="true" priority />
+        <div className="figma-status-content">
+          <section className="figma-status-message">
+            <Image className="figma-status-icon" src="/assets/auth/account-created.svg" width={48} height={48} alt="" aria-hidden="true" />
+            <div><h1>Check your email</h1><p>We’ve sent a password reset link to your email. Please check your inbox and follow the instructions.</p></div>
+          </section>
+          <Brand light />
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="auth-page auth-page--reset-flow">
+      <Image className="setup-password-background" src="/assets/auth/link-expired-background.svg" width={819} height={640} alt="" aria-hidden="true" priority />
+      <div className="reset-flow-content">
+        <Brand light />
+        <div className="setup-password-heading"><h1>Reset your password</h1><p>Please enter the email address you used to sign up. We will send you a link to reset your password.</p></div>
+        <form className="auth-card reset-request-card" onSubmit={submit} noValidate>
+          <FormError message={error} />
+          <label className="field"><span>Email <i className="required">*</i></span><input type="email" required value={email} onChange={(event) => { setEmail(event.target.value); setEmailError(""); setError(""); }} placeholder="Email" autoComplete="email" autoFocus disabled={submitting} aria-invalid={Boolean(emailError)} />{emailError && <small className="field-error">{emailError}</small>}</label>
+          <button className="button button--primary" type="submit" disabled={!email || submitting}>{submitting ? "Sending…" : "Confirm"}</button>
+        </form>
+      </div>
+    </main>
+  );
 }
