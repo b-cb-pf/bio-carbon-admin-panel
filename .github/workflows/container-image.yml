@@ -1,0 +1,153 @@
+name: Container image
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REPOSITORY: bio-carbon-dev-admin
+
+jobs:
+  quality:
+    name: Quality and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - name: Validate production container
+        if: github.event_name == 'pull_request'
+        run: |
+          docker build --platform linux/amd64 \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=/api \
+            --build-arg NEXT_PUBLIC_USE_MOCK_API=false \
+            --build-arg NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbon@gmail.com \
+            --tag bio-carbon-admin:pr .
+      - name: Verify release tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          expected="v$(node -p "require('./package.json').version")"
+          test "$GITHUB_REF_NAME" = "$expected" || {
+            echo "Tag $GITHUB_REF_NAME must match package version $expected." >&2
+            exit 1
+          }
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
+            echo "Release tags must point to a commit contained in main." >&2
+            exit 1
+          }
+
+  publish:
+    name: Publish immutable image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_IMAGE_PUBLISH_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - id: existing
+        name: Check for an existing immutable image
+        run: |
+          if digest=$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="sha-$GITHUB_SHA" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text 2>/dev/null); then
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.existing.outputs.digest == ''
+        uses: docker/setup-buildx-action@v3
+      - id: build
+        if: steps.existing.outputs.digest == ''
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:sha-${{ github.sha }}
+          provenance: false
+          build-args: |
+            NEXT_PUBLIC_API_BASE_URL=/api
+            NEXT_PUBLIC_USE_MOCK_API=false
+            NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbon@gmail.com
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Publish image reference
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          BUILT_DIGEST: ${{ steps.build.outputs.digest }}
+          EXISTING_DIGEST: ${{ steps.existing.outputs.digest }}
+        run: |
+          digest="${BUILT_DIGEST:-$EXISTING_DIGEST}"
+          printf '### Image reference\n`%s/%s@%s`\n' "$REGISTRY" "$ECR_REPOSITORY" "$digest" >> "$GITHUB_STEP_SUMMARY"
+
+  release:
+    name: Tag the existing image release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_IMAGE_PUBLISH_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Add the semantic-version tag to the existing manifest
+        run: |
+          source_digest=$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="sha-$GITHUB_SHA" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+          existing_digest=$(aws ecr describe-images \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$GITHUB_REF_NAME" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text 2>/dev/null || true)
+
+          if [[ -n "$existing_digest" && "$existing_digest" != "None" ]]; then
+            test "$existing_digest" = "$source_digest" || {
+              echo "$GITHUB_REF_NAME already points to a different immutable image." >&2
+              exit 1
+            }
+          else
+            manifest=$(aws ecr batch-get-image \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-ids imageDigest="$source_digest" \
+              --accepted-media-types application/vnd.docker.distribution.manifest.v2+json application/vnd.oci.image.manifest.v1+json \
+              --query 'images[0].imageManifest' \
+              --output text)
+            aws ecr put-image \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-tag "$GITHUB_REF_NAME" \
+              --image-manifest "$manifest" >/dev/null
+          fi
+
+          printf '### Released image\n`%s@%s` (tag `%s`)\n' "$ECR_REPOSITORY" "$source_digest" "$GITHUB_REF_NAME" >> "$GITHUB_STEP_SUMMARY"
