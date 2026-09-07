@@ -12,7 +12,9 @@ import { FormError } from "@/components/ui/form-error";
 import { apiErrorMessage } from "@/lib/api/client";
 import { getAuthSession } from "@/lib/auth-session";
 
-const primaryAdminEmail = (process.env.NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL ?? "biocarbon@gmail.com").trim().toLowerCase();
+const primaryAdminEmail = (process.env.NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL ?? "biocarbonprofile@gmail.com")
+  .trim()
+  .toLowerCase();
 
 const invitationLabels: Record<InvitationStatus, string> = {
   pending: "Pending",

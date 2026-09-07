@@ -37,7 +37,7 @@ jobs:
           docker build --platform linux/amd64 \
             --build-arg NEXT_PUBLIC_API_BASE_URL=/api \
             --build-arg NEXT_PUBLIC_USE_MOCK_API=false \
-            --build-arg NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbon@gmail.com \
+            --build-arg NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbonprofile@gmail.com \
             --tag bio-carbon-admin:pr .
       - name: Verify release tag matches package version
         if: startsWith(github.ref, 'refs/tags/v')
@@ -93,7 +93,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=/api
             NEXT_PUBLIC_USE_MOCK_API=false
-            NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbon@gmail.com
+            NEXT_PUBLIC_PRIMARY_ADMIN_EMAIL=biocarbonprofile@gmail.com
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Publish image reference
