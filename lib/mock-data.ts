@@ -1,4 +1,4 @@
-import type { Company, Staff, TemplateFile } from "./types";
+import type { Company, Staff } from "./types";
 
 export const staffMembers: Staff[] = [
   { id: "staff-01", name: "Carbon P.", email: "carbonprofile@lcenter.com", status: "Active" },
@@ -24,23 +24,4 @@ export const companies: Company[] = [
   { id: "greenleaf", name: "GreenLeaf Innovations Co., Ltd.", legalEntityNumber: "0105562981204", contractStartDate: "10 May 2023", contractEndDate: "09 May 2026", adminEmail: "admin@greenleaf.co.th" },
   { id: "united-food", name: "United Food Supply Co., Ltd.", legalEntityNumber: "0105537086249", contractStartDate: "15 Jul 2023", contractEndDate: "14 Jul 2025", adminEmail: "admin@unitedfood.co.th" },
   { id: "advance-tech", name: "Advance Tech Engineering Co., Ltd.", legalEntityNumber: "0105567891022", contractStartDate: "01 Nov 2022", contractEndDate: "31 Oct 2025", adminEmail: "admin@advancetech.co.th" },
-];
-
-export const templateFiles: TemplateFile[] = [
-  { id: "tpl-1", name: "[VARUNA] CarbonProfile - Scope 3 Universal Template v3.0", uploadedAt: "04 Jun 2568 23:09", purchased: true },
-  { id: "tpl-2", name: "[VARUNA] CarbonProfile - Scope 3 Universal Template v2.7", uploadedAt: "12 Feb 2568 14:22" },
-  { id: "tpl-3", name: "[VARUNA] CarbonProfile - Scope 3 Universal Template v2.0", uploadedAt: "12 Feb 2568 08:34" },
-  { id: "tpl-4", name: "[VARUNA] CarbonProfile - Scope 3 Universal Template v1.0", uploadedAt: "01 Jan 2568 06:46" },
-  { id: "tpl-5", name: "[VARUNA] CarbonProfile - Scope 3 Universal Template", uploadedAt: "08 Jan 2568 23:38" },
-];
-
-export const masterRows = [
-  ["EF_201_JP1", "1", "การขนส่งวัตถุดิบ", "รถบรรทุก", "kgCO₂e / t.km", "กรมควบคุมมลพิษ", "2566"],
-  ["EF_201_JP2", "1", "การขนส่งผลิตภัณฑ์", "รถบรรทุก", "kgCO₂e / t.km", "TGO Thailand", "2566"],
-  ["EF_201_JP3", "2", "การเดินทางทางธุรกิจ", "รถยนต์", "kgCO₂e / km", "IPCC Guidelines", "2565"],
-  ["EF_202_JP1", "3", "การใช้ไฟฟ้า", "พลังงาน", "kgCO₂e / kWh", "กฟผ.", "2566"],
-  ["EF_202_JP2", "3", "การใช้เชื้อเพลิง", "พลังงาน", "kgCO₂e / L", "กรมธุรกิจพลังงาน", "2566"],
-  ["EF_203_JP1", "4", "การจัดการของเสีย", "ของเสีย", "kgCO₂e / kg", "TGO Thailand", "2565"],
-  ["EF_204_JP1", "5", "การจัดซื้อสินค้า", "วัตถุดิบ", "kgCO₂e / kg", "Ecoinvent 3.9", "2566"],
-  ["EF_205_JP1", "6", "การขนส่งทางอากาศ", "ขนส่ง", "kgCO₂e / t.km", "DEFRA", "2566"],
 ];
