@@ -51,6 +51,19 @@ export function MasterDataScreen() {
   const [editing, setEditing] = useState<MasterDataRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [draftLabel, setDraftLabel] = useState("");
+
+  async function cloneDraft() {
+    if (!filters.versionId || !draftLabel.trim()) return;
+    setBusy(true); setError("");
+    try {
+      const draft = await masterDataApi.cloneDraft(filters.versionId, draftLabel.trim());
+      await loadVersions();
+      setFilters(current => ({ ...current, versionId: draft.id }));
+      setEditing(null); setDraftLabel(""); setSourceView(false); loadRows();
+    } catch (reason) { setError(apiErrorMessage(reason, t("Create draft failed"))); }
+    finally { setBusy(false); }
+  }
 
   const loadVersions = useCallback(async () => {
     const data = await masterDataApi.versions();
@@ -329,7 +342,13 @@ export function MasterDataScreen() {
       )}
       {error && <div className="maintenance-alert maintenance-alert--error">{error}</div>}
       {selectedVersion && ["published", "retired"].includes(selectedVersion.status) && (
-        <p className="master-group-help">{t("Published master edit guidance")}</p>
+        <section className="master-draft-copy">
+          <p className="master-group-help">{t("Clone master explanation")}</p>
+          <label className="field"><span>{t("New draft version label")}</span>
+            <input value={draftLabel} maxLength={100} disabled={busy} onChange={e => setDraftLabel(e.target.value)} />
+          </label>
+          <button className="button button--secondary" disabled={busy || !draftLabel.trim() || !!selectedVersion.deletionRequestedAt} onClick={() => void cloneDraft()}>{t("Create draft from this version")}</button>
+        </section>
       )}
       {catalogReady && !manifest && !catalogError && <p role="status">{t("Loading worksheets")}</p>}
       {catalogError && (

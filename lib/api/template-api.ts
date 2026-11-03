@@ -1,5 +1,5 @@
 import { apiRequest } from "./client";
-import type { MaintenanceLog, TemplateFile, TemplateMappingPreview } from "@/lib/types";
+import type { MaintenanceLog, TemplateFile, TemplateMappingPreview, TemplateMappingEditor, TemplateMappingEdit } from "@/lib/types";
 
 const unavailable = (): never => {
   throw new Error("Activity maintenance requires the backend.");
@@ -68,6 +68,12 @@ export const templateApi = {
       method: "POST",
       body: { masterVersionId },
     });
+  },
+  editor(id: string, masterVersionId: string) {
+    return apiRequest<TemplateMappingEditor>({ ...options, path: `${base}/templates/${id}/mapping-editor`, method: "POST", body: { masterVersionId } });
+  },
+  editMapping(id: string, body: TemplateMappingEdit) {
+    return apiRequest<TemplateMappingPreview>({ ...options, path: `${base}/templates/${id}/mapping`, method: "PATCH", body });
   },
   publish(id: string, masterVersionId: string, previewToken: string) {
     return apiRequest<TemplateFile & { versionSetId: string }>({

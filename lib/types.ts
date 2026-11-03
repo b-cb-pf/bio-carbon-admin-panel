@@ -95,8 +95,39 @@ export type TemplateMappingPreview = {
     reason: string | null;
     requestedFactorKey: string | null;
     efYear: number | null;
-    status: "matched" | "missing" | "ambiguous" | "collect_only" | "formula";
+    status: "matched" | "missing" | "ambiguous" | "collect_only" | "formula" | "pending_confirmation";
     matchCount: number;
     candidates: Array<Pick<MasterDataRow, "factorKey" | "kgCo2ePerUnit" | "source" | "sourceYear" | "unit">>;
   }>;
+};
+
+export type TemplateMappingEditor = {
+  revision: string;
+  sectionReviewIssues: string[];
+  canConfirmSection: boolean;
+  rows: Array<{
+    rowId: string;
+    sourceTypeCode: string;
+    activityLabel: string;
+    detailLabel: string;
+    unit: string;
+    allowedUnits?: string[];
+    calculationMode: string;
+    factorKey: string | null;
+    factorKeysByUnit?: Record<string, string>;
+    reviewNote?: string;
+    modeReason?: string;
+    editable: boolean;
+    options: Array<Pick<MasterDataRow, "factorKey" | "unit" | "kgCo2ePerUnit" | "source" | "sourceYear" | "isActive">>;
+  }>;
+};
+
+export type TemplateMappingEdit = {
+  masterVersionId: string;
+  revision: string;
+  rowId?: string;
+  mode?: "direct_factor" | "collect_only";
+  factorKeysByUnit?: Record<string, string>;
+  reason: string;
+  confirmSection?: boolean;
 };

@@ -25,6 +25,12 @@ function dateTime(value: string | null) {
     : "—";
 }
 
+function uploadLabel(scope: number, category: number) {
+  return scope === 3
+    ? t("Upload category template").replace("{category}", String(category))
+    : t("Upload template");
+}
+
 export function TemplateScreen() {
   const [scope, setScope] = useState(1);
   const [category, setCategory] = useState(1);
@@ -34,6 +40,7 @@ export function TemplateScreen() {
   const [result, setResult] = useState<{ key: string; items: TemplateFile[]; total: number } | null>(null);
   const [review, setReview] = useState<TemplateFile | null>(null);
   const [drawer, setDrawer] = useState<"upload" | TemplateFile | null>(null);
+  const [uploadTarget, setUploadTarget] = useState({ scope: 1, category: 0 });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const key = `${scope}:${category}:${page}:${revision}`;
@@ -69,7 +76,7 @@ export function TemplateScreen() {
     setBusy(true);
     setError("");
     try {
-      const created = await templateApi.upload(file, scope, scope === 3 ? category : 0, versionLabel.trim());
+      const created = await templateApi.upload(file, uploadTarget.scope, uploadTarget.category, versionLabel.trim());
       setDrawer(created);
       setPage(1);
     } catch (reason) {
@@ -80,13 +87,28 @@ export function TemplateScreen() {
     }
   }
 
+  const uploadButton = (
+    <button
+      className="button button--primary"
+      disabled={busy}
+      onClick={() => {
+        setError("");
+        setUploadTarget({ scope, category: scope === 3 ? category : 0 });
+        setDrawer("upload");
+      }}
+    >
+      <MaintenanceIcon name="upload" />
+      {uploadLabel(scope, category)}
+    </button>
+  );
+
   function reviewMapping(file: TemplateFile) {
     setDrawer(null);
     setReview(file);
   }
 
   return (
-    <div className="admin-container maintenance-page">
+    <div className="admin-container maintenance-page template-maintenance-page">
       <PageHeading
         icon={<MaintenanceIcon name="template" />}
         title={t("Template")}
@@ -100,6 +122,7 @@ export function TemplateScreen() {
         {[1, 2, 3].map((item) => (
           <button
             key={item}
+            disabled={busy || !!drawer}
             className={scope === item ? "active" : ""}
             onClick={() => {
               setScope(item);
@@ -115,33 +138,32 @@ export function TemplateScreen() {
         <h2>
           {t("Scope")} {scope}
         </h2>
-        <button
-          className="button button--primary"
-          onClick={() => {
-            setError("");
-            setDrawer("upload");
-          }}
-        >
-          <MaintenanceIcon name="upload" />
-          {t("Upload template")}
-        </button>
+        {scope !== 3 && uploadButton}
       </div>
       {scope === 3 && (
         <div className="category-row" aria-label={t("Category")}>
           {Array.from({ length: 15 }, (_, index) => index + 1).map((item) => (
             <button
               key={item}
-              disabled={[10, 11].includes(item)}
+              disabled={busy || !!drawer || [10, 11].includes(item)}
+              aria-pressed={category === item}
               className={category === item ? "active" : ""}
               title={[10, 11].includes(item) ? t("ยังไม่รองรับในรอบนี้") : undefined}
               onClick={() => {
                 setCategory(item);
                 setPage(1);
+                setError("");
               }}
             >
               {t("Category")} {item}
             </button>
           ))}
+        </div>
+      )}
+      {scope === 3 && (
+        <div className="maintenance-section-heading template-category-heading">
+          <h3>{t(`Scope 3 category ${category}`)}</h3>
+          {uploadButton}
         </div>
       )}
       {error && (
@@ -240,7 +262,7 @@ export function TemplateScreen() {
       )}
       {drawer && (
         <MaintenanceDrawer
-          title={t(drawer === "upload" ? "Upload template" : "Template details")}
+          title={drawer === "upload" ? uploadLabel(uploadTarget.scope, uploadTarget.category) : t("Template details")}
           busy={busy}
           onClose={() => setDrawer(null)}
         >
@@ -252,17 +274,18 @@ export function TemplateScreen() {
           {drawer === "upload" ? (
             <>
               <p>
-                {t("Scope")} {scope}
-                {scope === 3 ? ` · ${t("Category")} ${category}` : ""}
+                {t("Scope")} {uploadTarget.scope}
+                {uploadTarget.scope === 3 ? ` · ${t("Category")} ${uploadTarget.category}` : ""}
               </p>
               <label className="field">
                 <span>{t("Version")}</span>
                 <input value={versionLabel} onChange={(event) => setVersionLabel(event.target.value)} />
               </label>
-              <p>{t("Template upload help")}</p>
+              {uploadTarget.scope === 3 && <p>{t(`Scope 3 category ${uploadTarget.category}`)}</p>}
+              <p>{t(uploadTarget.scope === 3 ? "Category template upload help" : "Template upload help")}</p>
               <label className="button button--primary">
                 <MaintenanceIcon name="upload" />
-                {t(busy ? "กำลังตรวจ..." : "Upload template")}
+                {busy ? t("กำลังตรวจ...") : uploadLabel(uploadTarget.scope, uploadTarget.category)}
                 <input
                   className="sr-only"
                   type="file"
