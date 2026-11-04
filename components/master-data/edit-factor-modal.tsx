@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LoaderCircle } from "lucide-react";
 import { masterDataApi, type MasterCatalogRow } from "@/lib/api/master-data-api";
 import { apiErrorMessage } from "@/lib/api/client";
 import type { MasterDataRow } from "@/lib/types";
@@ -116,6 +117,7 @@ export function EditFactorModal({
     <div className="modal-layer" role="dialog" aria-modal="true" aria-labelledby="edit-ef-title">
       <form
         className="modal-card maintenance-edit-modal"
+        aria-busy={busy}
         onSubmit={(event) => {
           event.preventDefault();
           void save();
@@ -319,12 +321,14 @@ export function EditFactorModal({
             </label>
           </fieldset>
         </div>
+        <span className="maintenance-save-status" role="status">{busy ? t("Saving EF") : ""}</span>
         <div className="modal-card__actions">
           <button type="button" className="button button--secondary" disabled={busy} onClick={onClose}>
             {t("Cancel")}
           </button>
           <button type="submit" className="button button--primary" disabled={busy || !dirty || !valid}>
-            {t("Save draft")}
+            {busy && <LoaderCircle size={16} className="maintenance-save-spinner" aria-hidden="true" />}
+            {t(busy ? "Saving EF" : "Save draft")}
           </button>
         </div>
       </form>

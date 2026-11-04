@@ -111,6 +111,9 @@ export const masterDataApi = {
       method: "POST",
     });
   },
+  cloneDraft(id: string, versionLabel: string) {
+    return apiRequest<MasterDataVersion>({ ...options, path: `${base}/versions/${id}/draft`, method: "POST", body: { versionLabel } });
+  },
   update(
     versionId: string,
     factorKey: string,

@@ -667,3 +667,84 @@
 .master-source-toggle {
   margin: 12px 0;
 }
+
+/* Scope 3 category controls and upload action follow the selected category. */
+.template-maintenance-page .category-row {
+  gap: 8px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.template-maintenance-page .category-row button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.template-category-heading h3 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 600;
+}
+.template-category-heading > .button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .template-category-heading h3 {
+    flex-basis: 100%;
+  }
+}
+.mapping-edit-form, .master-draft-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  margin: 16px 0;
+  border: 1px solid #d8e1e6;
+  border-radius: 12px;
+  background: #f7faf9;
+}
+.mapping-edit-form select, .mapping-edit-form textarea, .master-draft-copy input {
+  width: 100%;
+  min-width: 0;
+}
+.mapping-edit-form code { overflow-wrap: anywhere; }
+.mapping-edit-form .maintenance-check { align-items: flex-start; }
+.master-draft-copy { max-width: 800px; }
+.mapping-edit-form h3 { margin: 0; }
+.mapping-edit-form p, .mapping-edit-form .field { margin: 0; }
+.mapping-edit-form textarea {
+  font: inherit;
+  padding: 12px;
+  min-height: 96px;
+  border: 1px solid #d8e1e6;
+  border-radius: 6px;
+  background: #fff;
+  resize: vertical;
+}
+.mapping-edit-form a { text-decoration: underline; color: #087e5c; }
+
+
+.maintenance-save-spinner {
+  flex-shrink: 0;
+  animation: maintenance-save-spin 0.8s linear infinite;
+}
+@keyframes maintenance-save-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .maintenance-save-spinner { animation: none; }
+}
+.maintenance-save-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
