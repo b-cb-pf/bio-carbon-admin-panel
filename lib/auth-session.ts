@@ -25,7 +25,7 @@ export function getAuthSession(): StoredAuthSession | null {
 
   try {
     const session = JSON.parse(raw) as StoredAuthSession;
-    if (!session.accessToken || new Date(session.expiresAt).getTime() <= Date.now()) {
+    if (!session.accessToken || !Number.isFinite(Date.parse(session.expiresAt)) || Date.parse(session.expiresAt) <= Date.now()) {
       clearAuthSession();
       return null;
     }

@@ -17,8 +17,8 @@ export const authApi = {
         return {
           accessToken: "mock-token",
           tokenType: "Bearer",
-          expiresIn: 7200,
-          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+          expiresIn: 28800,
+          expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
           admin: {
             id: "admin-01",
             email,
